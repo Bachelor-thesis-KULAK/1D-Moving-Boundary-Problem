@@ -1,2 +1,1 @@
-# 1D-Moving-Boundary-Problem
-The scripts for the simulations and the implementation of the models
+A Novel Interpolation-Based Method for Solving the One-Dimensional Wave Equation on a Domain with a Moving Boundary
