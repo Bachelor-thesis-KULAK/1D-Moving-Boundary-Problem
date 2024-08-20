@@ -444,7 +444,7 @@ for i = 1:numel(t_max_arr)
         ylim([10^(-4),10])
     end
 end
-xlabel('Input size of $\xi$', Interpreter='latex')
+xlabel('Number of $\xi$ evaluations', Interpreter='latex')
 ylabel('Computation time (s)', Interpreter='latex')
 
 add_legend(["Interpolation", "Backtracing"], col);
