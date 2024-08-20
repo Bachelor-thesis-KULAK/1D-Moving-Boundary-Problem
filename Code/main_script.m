@@ -93,7 +93,7 @@ legend("$|\alpha_{l}(" + [1, -1] + ")|$", interpreter='latex')
 
 % Plot the compliance of the boundary condition for 4 values of k and 2 values of time t
 figure
-k_arr = flip([0.1,0.25,0.5,1]);
+k_arr = flip([0.1,0.25,0.5,0.99]);
 time = [0,0.5];
 col = colororder;
 col = flip([col(4,:) * 0.7; col(1:3,:)]); % Custom colors
@@ -156,7 +156,7 @@ for i = 1:length(initial_conditions)
     loglog(n_coefs,err(:,3,i,1,1), linespec(i,3), MarkerIndices=i+4:6:length_n)
 end
 %title("Error bound on amplitude", interpreter='latex');
-xlabel("Number of coefficients", interpreter='latex');ylabel("Error", interpreter='latex')
+xlabel("Number of coefficients", interpreter='latex');ylabel("Error $\varepsilon_{\mbox{IC}}$", interpreter='latex')
 grid on
 
 leg1 = add_legend(["Exact $R$","Interpolation","Moore"],linespec(1,:));
