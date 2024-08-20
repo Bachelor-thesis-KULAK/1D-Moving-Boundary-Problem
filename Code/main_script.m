@@ -134,7 +134,7 @@ switch load_from_file
         for j = 1:length(boundary_conditions)    
             [L,R] = get_LR(boundary_conditions(j));
             Rint = find_R_interpolation(L,initialR='cubic',t_max=0);
-            Rmoore = find_R_moore(L,Kmax=4,t_max=5);
+            Rmoore = find_R_moore(L,Kmax=10,t_max=5);
 
             for i = 1:length(initial_conditions)
                 % get parameters for boundary+startcondition 
@@ -156,7 +156,7 @@ for i = 1:length(initial_conditions)
     loglog(n_coefs,err(:,3,i,1,1), linespec(i,3), MarkerIndices=i+4:6:length_n)
 end
 %title("Error bound on amplitude", interpreter='latex');
-xlabel("Number of coefficients", interpreter='latex');ylabel("Error $\varepsilon_{\mbox{IC}}$", interpreter='latex')
+xlabel("Number of coefficients", interpreter='latex');ylabel("Error $\varepsilon_{\mathrm{IC}}$", interpreter='latex')
 grid on
 
 leg1 = add_legend(["Exact $R$","Interpolation","Moore"],linespec(1,:));
@@ -202,13 +202,13 @@ colororder(col)
 yyaxis left
 loglog(reso, err_interpol(:,1), Color=col(1,:)), hold on
 loglog(reso, err_interpol(:,2), '--', Color=col(1,:)), hold off
-ylabel('rms $|R(t+L(t))-R(t-L(t))-2|$', Interpreter='latex')
+ylabel('rms $|\varepsilon_{\mathrm{BC},R}|$', Interpreter='latex')
 ylim([1e-15,5e-3])
 
 yyaxis right
 loglog(reso, err_char(:,1), Color=col(2,:)), hold on
 loglog(reso, err_char(:,2), '--', Color=col(2,:))
-ylabel('rms $|w(t+L(t))-w(t-L(t))|$', Interpreter='latex')
+ylabel('rms $|\varepsilon_{\mathrm{BC},w}|$', Interpreter='latex')
 ylim([1e-15,5e-3])
 xlim('tight')
 grid on
@@ -296,7 +296,7 @@ for type = 1:3 % sinhR, linearL, expL
     end
 end
 
-xlabel('Maximum $|\dot{L}|$', interpreter='latex'), ylabel('rms $|R(t+L(t))-R(t-L(t))-2|$', interpreter='latex')
+xlabel('Maximum $|\dot{L}|$', interpreter='latex'), ylabel('rms $|\varepsilon_{\mathrm{BC},R}|$', interpreter='latex')
 ylim([10^-15,10^3]), grid on
 
 leg = add_legend(["Hyperbolic sine $R$","Linear $L$","Exponential $L$"], linespec+"k");

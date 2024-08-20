@@ -53,13 +53,13 @@ tt = linspace(0,kwargs.t_max,17281); % test array for minimization
 gamma = cell(1,Kmax+1);
 derivs = cell(1,Kmax+1);
 gamma{1} = cellfun(@(x) 1./x, Lxi, 'UniformOutput', false);
-derivs{1} = gamma{1};
-dR = gamma{1}{Kmax+1};
-dR_arr = cell(1,Kmax+1);
-dR_arr{1} = interpolant(double(xi0),double(dR));
+dR = 0;
 
-k = 1;
-prev_error = Inf;
+if ~isempty(kwargs.K_array)  % store the dR
+    dR_arr = cell(1,Kmax+1);
+end
+
+k = 0;
 while k <= Kmax
     print_indented_message("Iteration " + string(k)) % print which iteration
     % Calculate next gamma_k
@@ -83,7 +83,6 @@ while k <= Kmax
 
     dR = dR + gamma{k+1}{Kmax+1};
     dR_interp = interpolant(double(xi0),double(dR));
-    dR_arr{k+1} = dR_interp;
 
     if isempty(kwargs.K_array)
         R = dR_interp.integral;
@@ -91,12 +90,21 @@ while k <= Kmax
         new_error = rmse(R(tt+L(tt))-R(tt-L(tt)),2);
     
         % check for convergence
-        if new_error >= prev_error || k == Kmax
-            print_indented_message("Best k: " + k)
+        if (k > 0 && new_error >= prev_error) || k == Kmax
+            if k > 0 && new_error >= prev_error
+                R = prev_R;
+                best_k = k-1;
+            else
+                best_k = k;
+            end
+            print_indented_message("Best k: " + best_k)
             print_indented_message("Finished in " + string(toc(timer)))
             return
         end
         prev_error = new_error;
+        prev_R = R;
+    else
+        dR_arr{k+1} = dR_interp;
     end
 
     k = k+1;

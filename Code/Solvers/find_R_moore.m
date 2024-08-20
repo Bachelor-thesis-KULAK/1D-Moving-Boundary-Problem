@@ -37,7 +37,7 @@ arguments
     L
     kwargs.t_max = 5
     kwargs.density = 1000
-    kwargs.Kmax = 20
+    kwargs.Kmax = 100
     kwargs.margin = 0
     kwargs.K_array = []
     kwargs.param_array = {}
@@ -63,10 +63,10 @@ if ~isempty(kwargs.param_array)
     try
         % Expand the dimensions of K_array, and of each element in param_array
         for j = 1:numel(kwargs.param_array)
-            kwargs.K_array = kwargs.K_array + zeros(size(kwargs.param_array{j})); % do dimensions agree?
+            kwargs.K_array = kwargs.K_array + zeros(size(kwargs.param_array{j})); % widen the dimensions
         end
         for j = 1:numel(kwargs.param_array)
-            kwargs.param_array{j} = kwargs.param_array{j} + zeros(size(kwargs.K_array)); % do dimensions agree?
+            kwargs.param_array{j} = kwargs.param_array{j} + zeros(size(kwargs.K_array)); % widen the dimensions
         end
     catch
         error('K_array and the arrays in param_array should have the same dimension or broadcasting should be possible')
@@ -95,13 +95,13 @@ end
 gamma = zeros(Kmax+1,1,'sym');
 derivs = zeros(Kmax+1,1,'sym');
 gamma(1) = 1/L(z);
-derivs(1) = 1/L(z);
-dR(z) = 1/L(z);
-dR_arr = cell(1,Kmax+1);
-dR_arr{1} = fastMatlabFunction(vpa(dR));
+dR(z) = 0;
 
-k = 1;
-prev_error = Inf;
+if ~isempty(kwargs.K_array)  % store the R'
+    dR_arr = cell(1,Kmax+1);
+end
+
+k = 0;
 while k <= Kmax
     print_indented_message("Iteration " + string(k)) % print which iteration
     % Calculate next gamma_k
@@ -110,11 +110,9 @@ while k <= Kmax
         gamma(k+1) = gamma(k+1)-(L(z)^(2*i))/ factorial(2*i+1) * derivs(k+1-i);
     end
     derivs(k+1) = gamma(k+1);
+    
     dR(z) = dR + gamma(k+1); % make sure dR depends on a parameter z
-
-    % Add R' handle based on the first k terms to dR_arr (cell array)
     dR_handle = fastMatlabFunction(vpa(dR));
-    dR_arr{k+1} = dR_handle;
 
     if isempty(kwargs.K_array)
         % minimize if no K_array is given
@@ -122,12 +120,22 @@ while k <= Kmax
         new_error = rmse(R(tt+L(tt))-R(tt-L(tt)),2);
     
         % check for convergence
-        if new_error >= prev_error || k == Kmax
-            print_indented_message("Best k: " + k)
+        if (k > 0 && new_error >= prev_error) || k == Kmax
+            if k > 0 && new_error >= prev_error
+                R = prev_R;
+                best_k = k-1;
+            else
+                best_k = k;
+            end
+            print_indented_message("Best k: " + best_k)
             print_indented_message("Finished in " + string(toc(timer)))
             return
         end
         prev_error = new_error;
+        prev_R = R;
+    else
+        % Add R' handle based on the first k terms to dR_arr (cell array)
+        dR_arr{k+1} = dR_handle;
     end
 
     k = k+1;
