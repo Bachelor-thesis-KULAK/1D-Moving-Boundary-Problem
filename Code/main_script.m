@@ -447,5 +447,5 @@ end
 xlabel('Input size of $\xi$', Interpreter='latex')
 ylabel('Computation time (s)', Interpreter='latex')
 
-add_legend(["Interpolation", "Backtrace"], col);
+add_legend(["Interpolation", "Backtracing"], col);
 add_legend("$t_0 = " + t_max_arr + "$", linespec+"k")
