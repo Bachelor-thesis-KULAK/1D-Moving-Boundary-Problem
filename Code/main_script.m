@@ -370,7 +370,7 @@ for j = 1:size(err,1)
     end
     ylim([10^-15,10^-1])
     xlabel('Time',Interpreter='latex');
-    ylabel("Root mean squared error",Interpreter='latex');
+    ylabel("$\varepsilon_{\mathrm{RMS}}$",Interpreter='latex');
 end
 figure(figs{1})
 
