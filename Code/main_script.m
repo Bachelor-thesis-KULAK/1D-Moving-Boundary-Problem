@@ -29,13 +29,13 @@ end
 % Plot the coefficients c_l
 figure
 plot(l_arr,c_l)
-xlabel('$l$', interpreter='latex'), ylabel('$c_l$', interpreter='latex')
+xlabel('$\ell$', interpreter='latex'), ylabel('$c_\ell$', interpreter='latex')
 xlim([0,15])
 
 % Plot the absolute value of the coefficients c_l
 figure
 semilogy(l_arr, abs(c_l))
-xlabel('$l$', interpreter='latex'), ylabel('$|c_l|$', interpreter='latex')
+xlabel('$\ell$', interpreter='latex'), ylabel('$|c_\ell|$', interpreter='latex')
 
 % Plot the compliance of the boundary condition for 3 values of the velocity v
 v_arr = [0.5, 0.75, 0.9];
@@ -48,7 +48,7 @@ for i = 1:numel(v_arr)
     ylim([10^(-15),1])
 end
 xlabel('$n$', interpreter='latex')
-ylabel('$|\sum_{l=0}^n \left( \alpha_{l}(t+L(t)) - \alpha_{l}(t-L(t)) \right)-2|$', interpreter='latex')
+ylabel('$|\sum_{\ell=0}^n \left( \alpha_{\ell}(t+L(t)) - \alpha_{\ell}(t-L(t)) \right)-2|$', interpreter='latex')
 legend("$v = " + string(v_arr) + "$", interpreter='latex')
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -69,16 +69,16 @@ ctilde_l = 10.^( log10(abs(c_l)) - (2*l_arr-1) .* log10(abs(2*l_arr-1)) );
 % Plot the coefficients c_l and add a tangent line
 figure
 semilogy(l_arr, abs(c_l))
-xlabel('$l$', interpreter='latex'), ylabel('$|c_l|$', interpreter='latex')
+xlabel('$\ell$', interpreter='latex'), ylabel('$|c_\ell|$', interpreter='latex')
 slope = log10(abs(c_l(42))) - log10(abs(c_l(41)));
 interc = log10(abs(c_l(41))) - 40*slope;
 hold on, semilogy(l_arr, 10.^(l_arr*slope+interc),'--')
-legend("$|c_l|$", "tangent line at $l = 40$", interpreter='latex')
+legend("$|c_\ell|$", "tangent line at $\ell = 40$", interpreter='latex')
 
 % Plot the coefficients ctilde_l
 figure
 semilogy(l_arr, ctilde_l)
-xlabel('$l$', interpreter='latex'), ylabel('$|\tilde{c}_l|$', interpreter='latex')
+xlabel('$\ell$', interpreter='latex'), ylabel('$|\tilde{c}_\ell|$', interpreter='latex')
 
 % Plot the terms alpha_l for xi = -1 and 1
 k = 0.25;
@@ -88,8 +88,8 @@ figure(Position=[488,242,560*3/4,420*3/4])
 alph1 = c_l2 .* k.^(2*l_arr2-1) .* exp((1-2*l_arr2)*k) ./ (1-2*l_arr2);
 alph2 = c_l2 .* k.^(2*l_arr2-1) .* exp(-(1-2*l_arr2)*k) ./ (1-2*l_arr2);
 semilogy(l_arr2, abs(alph1)), hold on, semilogy(l_arr2, abs(alph2))
-xlabel('$l$', interpreter='latex'), ylabel('$|\alpha_{l}|$', interpreter='latex')
-legend("$|\alpha_{l}(" + [1, -1] + ")|$", interpreter='latex')
+xlabel('$\ell$', interpreter='latex'), ylabel('$|\alpha_{\ell}|$', interpreter='latex')
+legend("$|\alpha_{\ell}(" + [1, -1] + ")|$", interpreter='latex')
 
 % Plot the compliance of the boundary condition for 4 values of k and 2 values of time t
 figure
@@ -108,7 +108,7 @@ for j = 1:numel(time)
 end
 ylim([10^(-15), 10^15])
 xlabel('$n$', interpreter='latex')
-ylabel('$|\sum_{l=0}^n \left( \alpha_{l}(t+L(t)) - \alpha_{l}(t-L(t)) \right)-2|$', interpreter='latex')
+ylabel('$|\sum_{\ell=0}^n \left( \alpha_{\ell}(t+L(t)) - \alpha_{\ell}(t-L(t)) \right)-2|$', interpreter='latex')
 legend("$k=" + k_arr + "$", interpreter='latex')
 add_legend("$t="+time+"$", ["k-","k--"]);
 
