@@ -28,6 +28,9 @@ end
 print_indented_message("Find R Interpolation",true)
 timer = tic;
 
+t_max = kwargs.t_max;
+kwargs.resolution = round(kwargs.resolution);
+
 if ~any(kwargs.initialR == ["linear", "quadratic", "cubic", "sigmoid-like"])
     error("Unrecognized InitialR")
 end
@@ -50,7 +53,7 @@ end
 % t1 such that t1-L(t1) = t0+L(t0)
 % t2 such that t2-L(t2) = t1+L(t1) ...
 t_breakpoints = 0;
-t_maxmarg = kwargs.t_max + kwargs.margin;
+t_maxmarg = t_max + kwargs.margin;
 while t_maxmarg - L(t_maxmarg) >= t_breakpoints(end) + L(t_breakpoints(end))
     fun_zero = @(t) (t-L(t)) - (t_breakpoints(end) + L(t_breakpoints(end)));
     t_breakpoints(end+1) = fzero(fun_zero,[0,t_maxmarg]);
@@ -63,15 +66,15 @@ while t_min + L(t_min) <= t_breakpoints_before(end) - L(t_breakpoints_before(end
 end
 
 %% Make t array with density 1/L*resolution
-if ceil(1000*kwargs.t_max) < 2
+if ceil(1000*t_max) < 2
     t = 0;
 else
-    t = linspace(0,kwargs.t_max,ceil(1000*kwargs.t_max)); % initial equidistant array
+    t = linspace(0,t_max,ceil(1000*t_max)); % initial equidistant array
     dt = (t(end)-t(1))/(length(t)-1);
     int_density = cumtrapz(dt,1./L(t)); % integral of density, L is efficiently evaluated in not many points
     num_points = ceil( int_density(end)*kwargs.resolution );
     if num_points > 10^8
-        error("length L gets too small (or resolution too high), running this program will crash")
+        error("The resolution is too high (or the length L is too small), too many points")
     end
     y = linspace(0,int_density(end),num_points); % choose equidistant array with wished number of points in transformed space
     t = interp1(int_density,t,y,'spline'); % inverse of y is an array with given density 1/L
@@ -80,12 +83,12 @@ end
 %% Make t_after array for xi > tmax+L(tmax)
 if kwargs.margin > 0
     % Make t_after array
-    t_after = linspace(kwargs.t_max,t_maxmarg,ceil(1000*kwargs.margin)); % initial equidistant array
+    t_after = linspace(t_max,t_maxmarg,ceil(1000*kwargs.margin)); % initial equidistant array
     dt_after = (t_after(end)-t_after(1))/(length(t_after)-1);
     int_density = cumtrapz(dt_after,1./L(t_after)); % integral of density, L is efficiently evaluated in not many points
     num_points = ceil( int_density(end)*kwargs.resolution );
     if num_points > 10^8
-        error("length L gets too small (or resolution too high), running this program will crash")
+        error("The resolution is too high (or the length L is too small), too many points")
     end
     y = linspace(0,int_density(end),num_points); % choose equidistant array with wished number of points in transformed space
     t_after = interp1(int_density,t_after,y,'spline'); % inverse of y is an array with given density 1/L
@@ -113,9 +116,9 @@ end
 L_in_t = L(t);
 
 % First, find all values of R at t = 0
-xi_0 = linspace(-L0, L0, 2*kwargs.resolution);
+xi_0 = linspace(-L0, L0, 2*kwargs.resolution-1);
 % the density of points in the time array is rho/L0 at t=0
-% so we choose rho/L0 * (2L0) = 2 rho points
+% so we choose rho/L0 * (L0) = rho points between -L0 and 0 and rho points between 0 and L0
 if kwargs.initialR == "linear"
     R_0_fun = @(xi_0) (xi_0+L0)/(L0);
 elseif kwargs.initialR == "quadratic"
@@ -145,7 +148,9 @@ for i = 1:length(t_breakpoints)
         new_R = 2 + R_PP(t_arr-L_arr);
         new_R_PP = interpolant(t_arr+L_arr, new_R, kwargs.method);
         common_break = R_PP.PP.breaks(end);
-        if abs(new_R_PP(common_break) - R_PP(common_break)) > 10^(-10)
+        if size(R_PP.PP.coefs,2) ~= size(new_R_PP.PP.coefs,2)
+            error('Resolution is too small (too little points in this region)')
+        elseif abs(new_R_PP(common_break) - R_PP(common_break)) > 10^(-10)
             error('Interpolation objects are not consistent (this means that R is discontinuous)')
         end
         % Merge pp objects between regions
@@ -171,6 +176,9 @@ if kwargs.margin > 0
             L_arr = L_in_t_before(t_indices);
             new_R = -2 + R_PP(t_arr+L_arr);
             new_R_PP = interpolant(t_arr-L_arr, new_R, kwargs.method);
+            if size(R_PP.PP.coefs,2) ~= size(new_R_PP.PP.coefs,2)
+                error('Resolution is too small (too little points in this region)')
+            end
             % Merge pp objects between regions
             PP = mkpp([new_R_PP.PP.breaks(1:end-1), R_PP.PP.breaks], [new_R_PP.PP.coefs; R_PP.PP.coefs]);
             R_PP = interpolant(PP);

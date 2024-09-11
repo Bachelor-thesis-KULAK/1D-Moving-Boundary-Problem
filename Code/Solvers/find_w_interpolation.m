@@ -30,6 +30,7 @@ print_indented_message("Find w interpolation",true)
 timer = tic;
 
 t_max = kwargs.t_max;
+kwargs.resolution = round(kwargs.resolution);
 
 %% Find time breakpoints
 % t0 = 0
@@ -57,7 +58,7 @@ else
     int_density = cumtrapz(dt,1./L(t)); % integral of density, L is efficiently evaluated in not many points
     num_points = ceil( int_density(end)*kwargs.resolution );
     if num_points > 10^8
-        error("length L gets too small (or resolution too high), running this program will crash")
+        error("The resolution is too high (or the length L is too small), too many points")
     end
     y = linspace(0,int_density(end),num_points); % choose equidistant array with wished number of points in transformed space
     t = interp1(int_density,t,y,'spline'); % inverse of y is an array with given density 1/L
@@ -71,7 +72,7 @@ if kwargs.margin > 0
     int_density = cumtrapz(dt_after,1./L(t_after)); % integral of density, L is efficiently evaluated in not many points
     num_points = ceil( int_density(end)*kwargs.resolution );
     if num_points > 10^8
-        error("length L gets too small (or resolution too high), running this program will crash")
+        error("The resolution is too high (or the length L is too small), too many points")
     end
     y = linspace(0,int_density(end),num_points); % choose equidistant array with wished number of points in transformed space
     t_after = interp1(int_density,t_after,y,'spline'); % inverse of y is an array with given density 1/L
@@ -124,6 +125,9 @@ for i = 1:length(t_breakpoints)
         L_arr = L_in_t(t_indices);
         new_w = w_PP(t_arr-L_arr);
         new_w_PP = interpolant(t_arr+L_arr, new_w, kwargs.method);
+        if size(w_PP.PP.coefs,2) ~= size(new_w_PP.PP.coefs,2)
+            error('Resolution is too small (too little points in this region)')
+        end
         % Merge pp objects between regions
         PP = mkpp([w_PP.PP.breaks, new_w_PP.PP.breaks(2:end)], [w_PP.PP.coefs; new_w_PP.PP.coefs]);
         w_PP = interpolant(PP);
@@ -147,6 +151,9 @@ if kwargs.margin > 0
             L_arr = L_in_t_before(t_indices);
             new_w = w_PP(t_arr+L_arr);
             new_w_PP = interpolant(t_arr-L_arr, new_w, kwargs.method);
+            if size(w_PP.PP.coefs,2) ~= size(new_w_PP.PP.coefs,2)
+                error('Resolution is too small (too little points in this region)')
+            end
             % Merge pp objects between regions
             PP = mkpp([new_w_PP.PP.breaks(1:end-1), w_PP.PP.breaks], [new_w_PP.PP.coefs; w_PP.PP.coefs]);
             w_PP = interpolant(PP);
