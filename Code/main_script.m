@@ -175,11 +175,11 @@ switch load_from_file
         load('err_boundary_conditions')
     case false
         As = [2,0.1];
-        reso = 10.^linspace(1.5,4.5,50);
+        reso = round( 10.^linspace(1.5,4.5,50) );
         t_max = 4;
         tt = linspace(0,t_max,179416);
 
-        err_interpol = zeros(length(reso), numel(As));
+        err_interp = zeros(length(reso), numel(As));
         err_char = zeros(length(reso), numel(As));
         for j = 1:numel(As)
             L = get_LR('sinhR',A=As(j));
@@ -187,7 +187,7 @@ switch load_from_file
             for i = 1:length(reso)
                 R = find_R_interpolation(L, t_max=t_max, resolution=reso(i));
                 w = find_w_interpolation(f,g,L, t_max=t_max, resolution=reso(i));
-                err_interpol(i,j) = rmse(R(tt+L(tt))-R(tt-L(tt)), 2); % Root Mean Squared Error
+                err_interp(i,j) = rmse(R(tt+L(tt))-R(tt-L(tt)), 2); % Root Mean Squared Error
                 err_char(i,j) = rmse(w(tt+L(tt))-w(tt-L(tt)), 0);
             end
         end
@@ -200,8 +200,8 @@ xlabel('Resolution $\rho$', Interpreter='latex')
 
 colororder(col)
 yyaxis left
-loglog(reso, err_interpol(:,1), Color=col(1,:)), hold on
-loglog(reso, err_interpol(:,2), '--', Color=col(1,:)), hold off
+loglog(reso, err_interp(:,1), Color=col(1,:)), hold on
+loglog(reso, err_interp(:,2), '--', Color=col(1,:)), hold off
 ylabel('rms $|\varepsilon_{\mathrm{BC},R}|$', Interpreter='latex')
 ylim([1e-15,5e-3])
 
