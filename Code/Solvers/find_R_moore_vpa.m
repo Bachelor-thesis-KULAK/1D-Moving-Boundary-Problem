@@ -48,7 +48,7 @@ for i = 1:numel(xi)
     Lxi{i} = L(xi{i});
 end
 
-tt = linspace(0,kwargs.t_max,17281); % test array for minimization
+tt = linspace(0,kwargs.t_max,1e5); % test array for minimization
 
 gamma = cell(1,Kmax+1);
 derivs = cell(1,Kmax+1);

@@ -82,7 +82,7 @@ syms dR(z)
 % derivative of R, namely R'
 tmax = kwargs.t_max;
 
-tt = linspace(0,tmax,17281); % test array for minimization
+tt = linspace(0,tmax,1e5); % test array for minimization
 
 if ~isempty(kwargs.K_array)
     Kmax = max(kwargs.K_array,[],"all");

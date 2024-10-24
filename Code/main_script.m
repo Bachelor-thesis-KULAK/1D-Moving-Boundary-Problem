@@ -112,6 +112,23 @@ ylabel('$|\sum_{\ell=0}^n \left( \alpha_{\ell}(t+L(t)) - \alpha_{\ell}(t-L(t)) \
 legend("$k=" + k_arr + "$", interpreter='latex')
 add_legend("$t="+time+"$", ["k-","k--"]);
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Illustration of the length L
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+t = linspace(0,4.5,1000);
+L1 = get_LR("sinhR",A=2);
+L2 = get_LR("sinhR",A=0.1);
+figure(Position=[488,303,340,254]), colororder([0,0,1;1,0,0])
+plot(t,L1(t))
+hold on, plot(t,L2(t))
+box off
+xlim('tight')
+ylim([0,1.1*L2(1)])
+xlabel('$t$',Interpreter='latex')
+ylabel('$L(t)$',Interpreter='latex')
+legend("$A = " + [2,0.1] + "$", Interpreter='latex')
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Error on initial conditions, using coefs error (error bound on amplitude)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -175,14 +192,21 @@ switch load_from_file
         load('err_boundary_conditions')
     case false
         As = [2,0.1];
-        reso = round( 10.^linspace(1.5,4.5,50) );
-        t_max = 4;
-        tt = linspace(0,t_max,179416);
+        reso = round( 10.^linspace(log10(30),log10(5e4),50) );
+        rmse_evals = 3e6; % number of test points for rmse
+        num_breakpoints = 5; % Choose tmax such that there are 5 breakpoints (so up to R(xi) = 10)
 
         err_interp = zeros(length(reso), numel(As));
         err_char = zeros(length(reso), numel(As));
         for j = 1:numel(As)
             L = get_LR('sinhR',A=As(j));
+            t_breakpoint = 0;
+            for num_breakpoint = 1:(num_breakpoints-1)
+                t_breakpoint = fzero(@(t) (t-L(t)) - (t_breakpoint + L(t_breakpoint)), t_breakpoint);
+            end
+            t_max = t_breakpoint;
+            tt = linspace(0,t_max,rmse_evals); % test array for rmse
+
             [f,g] = get_fg(L, 'gauss');
             for i = 1:length(reso)
                 R = find_R_interpolation(L, t_max=t_max, resolution=reso(i));
@@ -225,7 +249,7 @@ switch load_from_file
         load('err_boundary_conditions_moore')
     case false
         t_max = 4;
-        tt = linspace(0,t_max,17416);
+        rmse_evals = 1e5; tt = linspace(0,t_max,rmse_evals); % test array for rmse
         K_cell = {[2,3,4,5], [5,10,25,100], [5,10,15]};
         v_cell = {10.^linspace(log10(0.05),log10(0.95),20).', 10.^linspace(log10(0.05),log10(0.95),200).', ...
             10.^linspace(log10(0.05),log10(0.95),200).'}; % Choose array of max velocities

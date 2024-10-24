@@ -141,9 +141,9 @@ for i = 1:length(t_breakpoints)
     else
         t_indices = t_breakpoints(i) <= t & t <= t_breakpoints(i+1);
     end
-    print_indented_message("Spline object " + i + ": from index " + find(t_indices,1,"first") + " to " + find(t_indices,1,"last"))
     t_arr = t(t_indices);
     if numel(t_arr) > 1
+        print_indented_message("Spline object " + i + ": from index " + find(t_indices,1,"first") + " to " + find(t_indices,1,"last"))
         L_arr = L_in_t(t_indices);
         new_R = 2 + R_PP(t_arr-L_arr);
         new_R_PP = interpolant(t_arr+L_arr, new_R, kwargs.method);
