@@ -53,12 +53,16 @@ end
 
 function y = backtrace(x,L,R_0_fun)
     y = x;
+    plus2 = zeros(size(x));
     L0 = L(0);
-    for i = 1:numel(x)
+    for i = 1:numel(y)
+        j = 0;
         while y(i) > L0
-            t = fzero(@(t) t+L(t)-y(i), 0);
+            t = fzero(@(t) t+L(t)-y(i), [0,y(i)]); % look between t=0 and t=y(i)
             y(i) = t-L(t);
+            j = j+1;
         end
+        plus2(i) = j;
     end
-    y = R_0_fun(y);
+    y = R_0_fun(y) + 2*plus2;
 end
