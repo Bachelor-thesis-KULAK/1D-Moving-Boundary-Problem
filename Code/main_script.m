@@ -188,7 +188,7 @@ title(leg2, "Initial condition", Interpreter='latex')
 %% Error on boundary condition as function of resolution
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-load_from_file = false;
+load_from_file = true;
 switch load_from_file
     case true
         load('err_boundary_conditions.mat')
@@ -428,7 +428,7 @@ disp(T)
 %% run time: R_interpolation vs R_backtrace
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-load_from_file = false;
+load_from_file = true;
 switch load_from_file
     case true
         load('R_compute_time.mat')
