@@ -52,9 +52,13 @@ function [L,R] = get_LR(boundary_condition,kwargs)
                 L = @(t) L0*exp(-k*t);
             case "sinL"
                 if isfield(kwargs,'L0'); L0 = kwargs.L0; else; L0 = 1; end
-                if isfield(kwargs,'A'); A = kwargs.A; else; A = 0.01; end
-                if isfield(kwargs,'k'); k = kwargs.k; else; k = 50; end
-                L = @(t) L0 + A*sin(k*t);
+                if isfield(kwargs,'A'); A = kwargs.A; else; A = 0.2; end
+                % A = oscillation amplitude
+                theta = atan(A*pi/L0);
+                L = @(t) L0*(1 + 1/(2*pi)*(asin(sin(theta)*cos(2*pi*(t/L0))) - theta));
+                two_n = @(xi) floor(xi/L0); % this results in the right branch
+                R_oscillation = @(xi,two_n) two_n+1/2-1/pi*atan(cot(pi*(xi/L0-two_n)) - two_n*pi*A/L0);
+                R = @(xi) R_oscillation(xi,two_n(xi));
         end
     end
 end

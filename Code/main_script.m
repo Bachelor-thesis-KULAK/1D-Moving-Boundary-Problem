@@ -140,7 +140,7 @@ switch load_from_file
     case false
         n_coefs = floor(10.^(linspace(log10(4),log10(1000),40)));
         boundary_conditions = "sinhR";
-        initial_conditions = ["gauss", "sin"];
+        initial_conditions = ["gauss", "sin", "shiftedsin"];
 
         % initialisation and figures
         err = zeros([length(n_coefs), 3, ...
@@ -150,21 +150,23 @@ switch load_from_file
         
         for j = 1:length(boundary_conditions)    
             [L,R] = get_LR(boundary_conditions(j));
-            Rint = find_R_interpolation(L,initialR='cubic',t_max=0);
-            Rmoore = find_R_moore(L,Kmax=10,t_max=5);
+            Rint = find_R_interpolation(L,initialR='quadratic',t_max=0);
+            Rmoore = find_R_moore(L,Kmax=10,t_max=0);
 
             for i = 1:length(initial_conditions)
                 % get parameters for boundary+startcondition 
                 [f,g] = get_fg(L,initial_conditions(i));
-        
-                [err(:,1,i,j),~] = coefs_error(f,g,R,L(0),n_coefs);
-                [err(:,2,i,j),~] = coefs_error(f,g,Rint,L(0),n_coefs);
-                [err(:,3,i,j),~] = coefs_error(f,g,Rmoore,L(0),n_coefs);
+                err(:,1,i,j) = coefs_error(f,g,R,L(0),n_coefs);
+                err(:,2,i,j) = coefs_error(f,g,Rint,L(0),n_coefs);
+                err(:,3,i,j) = coefs_error(f,g,Rmoore,L(0),n_coefs);
+            
             end
         end
 end
 linespec = ["r-s","g-o","b-v"; 
-            "r--s","g--o","b--v"];
+            "r--s","g--o","b--v";
+            "r:s","g:o","b:v"
+            ];
 figure
 length_n = length(n_coefs);
 for i = 1:length(initial_conditions)
@@ -177,7 +179,7 @@ xlabel("Number of coefficients", interpreter='latex');ylabel("Error $\varepsilon
 grid on
 
 leg1 = add_legend(["Exact $R$","Interpolation","Moore"],linespec(1,:));
-leg2 = add_legend(["Gaussian", "Sine"],["k","k--"]);
+leg2 = add_legend(["Gaussian", "Sine", "Shifted-sine"],["k","k--", "k:"]);
 title(leg1, "Method", Interpreter='latex');
 title(leg2, "Initial condition", Interpreter='latex')
 
@@ -186,13 +188,13 @@ title(leg2, "Initial condition", Interpreter='latex')
 %% Error on boundary condition as function of resolution
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-load_from_file = true;
+load_from_file = false;
 switch load_from_file
     case true
-        load('err_boundary_conditions')
+        load('err_boundary_conditions.mat')
     case false
         As = [2,0.1];
-        reso = round( 10.^linspace(log10(30),log10(5e4),50) );
+        reso = round( 10.^linspace(log10(50),log10(1e5),50) );
         rmse_evals = 3e6; % number of test points for rmse
         num_breakpoints = 5; % Choose tmax such that there are 5 breakpoints (so up to R(xi) = 10)
 
@@ -246,7 +248,7 @@ add_legend("$A = " + As + "$",["k-","k--"]);
 load_from_file = true; % Load from file, this takes really long to run
 switch load_from_file
     case true
-        load('err_boundary_conditions_moore')
+        load('err_boundary_conditions_moore.mat')
     case false
         t_max = 4;
         rmse_evals = 1e5; tt = linspace(0,t_max,rmse_evals); % test array for rmse
@@ -338,16 +340,17 @@ switch load_from_file
         nx = 500;
         t_max = 5;
         time_arr = 0:1/120:t_max;
-        boundary_conditions = ["linearL","sinhR"];
-        initial_conditions = ["gauss","sin"];
+        boundary_conditions = ["linearL","sinhR","sinL"];
+        initial_conditions = ["gauss","sin", "shiftedsin"];
         err = cell(length(boundary_conditions), length(initial_conditions));
 
         % make all permutations of boundary and initial conditions
         for j = 1:length(boundary_conditions)
             [L,R] = get_LR(boundary_conditions(j));
-            dR = derivative(R);
-
+            dR = derivative(R,1,replacenan=true);
+            
             R_int = find_R_interpolation(L,t_max=t_max);
+      
             R_moo = find_R_moore(L,t_max=t_max);
             for i = 1:length(initial_conditions)
                 [f,g] = get_fg(L,initial_conditions(i));
@@ -363,19 +366,21 @@ switch load_from_file
                 u_int = interpolation_solver(f,g,L,nx=nx,t=time_arr,n_max=200,R=R_int);
                 u_cha = characteristics_solver(f,g,L,nx=nx,t=time_arr);
                 u_moo = moore_solver(f,g,L,nx=nx,t=time_arr,n_max=200,R=R_moo);
-
+             
                 % RMSE error
                 error_int = rms_error(u_int,u_ana);
                 error_cha = rms_error(u_cha,u_ana);
                 error_moo = rms_error(u_moo,u_ana);
         
-                err{j,i} = {error_int, error_cha, error_moo}; %, error_bac};
+                err{j,i} = {error_cha, error_int, error_moo};
             end
         end
 end
 
 linespec = ["-s","-o","-v"; 
-            "--s","--o","--v"];
+            "--s","--o","--v";
+            ":s",":o",":v"
+            ];
 length_t = length(time_arr);
 
 figs = cell(1,size(err,1));
@@ -392,22 +397,38 @@ for j = 1:size(err,1)
         semilogy(time_arr,error_cha,linespec(i,2),Color=col(2,:),MarkerIndices=11+(i-1)*30:60:length_t),
         semilogy(time_arr,error_moo,linespec(i,3),Color=col(3,:),MarkerIndices=21+(i-1)*30:60:length_t),
     end
-    ylim([10^-15,10^-1])
+    ylim([10^-15,10^0])
     xlabel('Time',Interpreter='latex');
     ylabel("$\varepsilon_{\mathrm{RMS}}$",Interpreter='latex');
 end
-figure(figs{1})
+figure(figs{size(err,1)})
 
 leg1 = add_legend(["Interpolation","Characteristics","Moore"], linespec(1,:), col);
-leg2 = add_legend(["Gaussian","Sine"], ["k-","k--"]);
+leg2 = add_legend(["Gaussian","Sine", "Shifted-sine"], ["k-","k--", "k:"]);
 title(leg1, "Method", Interpreter='latex')
 title(leg2, "Initial condition", Interpreter='latex')
+
+Boundary_condition = repelem(["i.";"ii.";"iii."], 3);
+Initial_condition = repmat(["Gaussian";"Sine";"Shifted-sine"], 3,1);
+IMC = zeros(numel(err),1); IMR = IMC; Moore = IMC;
+k = 1;
+for j = 1:size(err,1)  % Loop over boundary conditions
+    for i = 1:size(err,2)  % Loop over initial conditions
+        rms_error = cellfun(@(err_) rms(err_), err{j,i});
+        IMC(k) = rms_error(1);
+        IMR(k) = rms_error(2);
+        Moore(k) = rms_error(3);
+        k = k + 1;
+    end
+end
+T = table(Boundary_condition, Initial_condition, IMC, IMR, Moore);
+disp(T)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% run time: R_interpolation vs R_backtrace
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-load_from_file = true;
+load_from_file = false;
 switch load_from_file
     case true
         load('R_compute_time.mat')
@@ -429,7 +450,6 @@ switch load_from_file
             inputsize = 10.^linspace(1,8,50);
             compute_time = zeros(size(inputsize));
             t_max = t_max_arr(i);
-            figure
             for j = 1:2
                 for k = 1:numel(inputsize)
                     xi = linspace(t_max-L(t_max),t_max+L(t_max),inputsize(k));
@@ -457,7 +477,7 @@ switch load_from_file
 end
 
 figure
-linespec = ["-","--"];
+linespec = ["-","--","-."];
 col = colororder;
 col(1,:) = col(1,:)*0.7; % DARK
 col(2,:) = col(2,:)*1.15; % LIGHT

@@ -13,7 +13,7 @@ function R = find_R_backtrace(L,kwargs)
 
 arguments
     L
-    kwargs.initialR = "cubic"
+    kwargs.initialR = "quadratic"
     kwargs.derivL0 = []
 end
 
